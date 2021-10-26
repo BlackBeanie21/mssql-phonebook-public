@@ -1,0 +1,24 @@
+{
+	"custom_1":
+	{	
+		"host": "192.168.5.60",
+		"port": "1433",
+		"user": "sa",
+		"query": "SELECT * FROM 50-contacts\n",
+		"password": "Raffaele,1234",
+		"dbname": "testcontatti",
+		"dbtable": "50-contacts",
+		"driver": "ODBC Driver 17 for SQL Server",
+		"mapping":
+		{
+			"workphone": "workphone"
+			"homephone": "homephone",
+			"name": "name",
+			"company": "company"
+		},
+		"dbtype": "mssql",
+		"interval": "1440",
+		"type": "phonebook2",
+		"enabled": "true"
+	}
+}
