@@ -141,7 +141,7 @@ def syncSourceMysql(path, output, deleteonly):
       if(sConfig[sid]['dbtype'] == 'mysql'):
 	values.append(row[el]) # non puoi accedere ad un oggetto di tipo row du pyodbc come fosse un dict, puoi usare __getattribute__ https://github.com/mkleehammer/pyodbc/wiki/Row
       elif(sConfig[sid]['dbtype'] == 'mssql'):
-	row.__getattribute__('el')
+	values.append(row.__getattribute__('el'))
     values.append(str(sid))
     if sConfig[sid]['type'] != None:
       values.append(str(sConfig[sid]['type']))
@@ -310,7 +310,6 @@ if __name__ == '__main__':
       logger.debug('reading ' + args.source_path)
       with open(args.source_path, 'r') as sourceFile:
         sConfig = json.load(sourceFile)
-	print("CARICAMENTO RIUSCITO") # Togliere
     except Exception as err:
       logger.error('reading ' + args.source_path)
       logger.error(str(err))
