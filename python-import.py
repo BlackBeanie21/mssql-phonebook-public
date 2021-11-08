@@ -51,7 +51,10 @@ def syncSourceMysql(path, output, deleteonly):
   sid = next(iter(sConfig))
   dbSource = getDbConn(sConfig[sid])
   if output == True:
-    dbSource.set_character_set('utf8') # questa funzione non esiste per pyodbc https://github.com/mkleehammer/pyodbc/wiki/Unicode
+    if(sConfig[sid]['dbtype'] == 'mysql'):
+    	dbSource.set_character_set('utf8') # questa funzione non esiste per pyodbc https://github.com/mkleehammer/pyodbc/wiki/Unicode
+    if(sConfig[sid]['dbtype'] == 'mssql'):
+   	dbSource.setdecoding(pyodbc.SQL_WMETADATA, encoding='utf-32le')
   if dbSource != None:
     logger.debug('source "' + sid + '" connection (' + sConfig[sid]['dbname'] + '): ok')
   else:
@@ -117,13 +120,12 @@ def syncSourceMysql(path, output, deleteonly):
 
   elif(sConfig[sid]['dbtype'] == 'mssql'):
     result=[]
-    querymssql = "SELECT * FROM .." # Perche'?
-    curSource = dbSource.cursor(pyodbc.cursor()) # non si fa cosi' il cursore, vedi come e' stato fatto alla riga 60
+    curSource = pyodbc.cursor()
     curSource.execute(sConfig[sid]['query'])
-    columns = [column[0] for column in curSource.description] # sourceCols contiene gia' la lista delle colonne sorgente, a cosa serve questo codice? Va bene copiare codice, ma devio capire cosa fa e perche'
-    for row in curSource.fetchall(): # questo codice funziona, ma mi sembra incollato qui a cazzo di cane.
-	x = dict(zip(columns, row) ) # perche' le metti in un dict?
-	result.append(x) # popoli la variabile result e poi non ci fai nulla
+   # columns = [column[0] for column in curSource.description] # sourceCols contiene gia' la lista delle colonne sorgente, a cosa serve questo codice? Va bene copiare codice, ma devio capire cosa fa e perche'
+   # for row in curSource.fetchall(): # questo codice funziona, ma mi sembra incollato qui a cazzo di cane.
+   #	x = dict(zip(columns, row) ) # perche' le metti in un dict?
+   #	result.append(x) # popoli la variabile result e poi non ci fai nulla
     row = curSource.fetchone() # perche' ora rileggi la riga? va bene, ma elimina il codice qui sopra
     importedCount = 0
     errCount = 0
@@ -136,7 +138,10 @@ def syncSourceMysql(path, output, deleteonly):
   while row is not None:
     values = []
     for el in sourceCols:
-      values.append(row[el]) # non puoi accedere ad un oggetto di tipo row du pyodbc come fosse un dict, puoi usare __getattribute__ https://github.com/mkleehammer/pyodbc/wiki/Row
+      if(sConfig[sid]['dbtype'] == 'mysql'):
+	values.append(row[el]) # non puoi accedere ad un oggetto di tipo row du pyodbc come fosse un dict, puoi usare __getattribute__ https://github.com/mkleehammer/pyodbc/wiki/Row
+      elif(sConfig[sid]['dbtype'] == 'mssql'):
+	row.__getattribute__('el')
     values.append(str(sid))
     if sConfig[sid]['type'] != None:
       values.append(str(sConfig[sid]['type']))
@@ -316,6 +321,8 @@ if __name__ == '__main__':
       logger.info(sid + ' is disabled')
       sys.exit(0)
     if sConfig[sid]['dbtype'] == 'mysql': # In questo modo chiama la funzione syncSourceMysql solo se il dbtype e mysql, se lo metti a mssql non entra mai nella funzione con il tuo codice. O crei un'altra funzione con il tuo codice e la chiami se il db type e' mssql o cambi questo if 
+      syncSourceMysql(args.source_path, args.check, args.deleteonly)
+    elif sConfig[sid]['dbtype'] == 'mssql':
       syncSourceMysql(args.source_path, args.check, args.deleteonly)
     elif sConfig[sid]['dbtype'] == 'csv':
       syncSourceCsv(args.source_path, args.check, args.deleteonly)
